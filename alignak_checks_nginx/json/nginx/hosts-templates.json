@@ -8,7 +8,9 @@
             "_REQ_PER_SEC_WARN": "50:",
             "_REQ_PER_SEC_CRIT": "75:",
             "_CONN_PER_SEC_WARN": "10",
-            "_CONN_PER_SEC_CRIT": "20"
+            "_CONN_PER_SEC_CRIT": "20",
+            "_PORT": 80,
+            "_STATUS_URL": "/status"
         },
         "name": "nginx",
         "tags": [
