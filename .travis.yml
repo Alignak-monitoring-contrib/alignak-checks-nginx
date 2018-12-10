@@ -3,26 +3,60 @@ sudo: true
 python:
   - "2.7"
 
+install:
+  - sudo apt-get install -y rpm
+
 script:
   - pip freeze  # so to help eventual debug: know what exact versions are in use can be rather useful.
 
 after_success:
-  - ./package.sh $TRAVIS_BRANCH $TRAVIS_PYTHON_VERSION
+  - echo "Packaging for BinTray - Debian..."
+  - ./package.sh $TRAVIS_BRANCH $TRAVIS_PYTHON_VERSION deb
+  - echo "Packaging for BinTray - RPM..."
+  - ./package.sh $TRAVIS_BRANCH $TRAVIS_PYTHON_VERSION rpm
 
 deploy:
-  - provider: bintray
-    skip_cleanup: true
-    file: .bintray.json
-    user: ddurieux
-    key:
-      secure: "aCA7sGVt4Pxty1d/tqo7iwipLBa9OcgbQHbOC+baDkBUp1DGrddbo62AEKBqWg41KLConQs4e2k/STSW8nOJU4M61yxKLx+hrCwoDbOzTxVRoZGHMBmHv3gBz5bF6/wYP5pCnsj/M1//LjzFQG9MQ5JiFv3iPSDRWdLOLTmg5vXgFDyQ4/Vt9Ad/1Lq+rwxjHHHswsO08LVdo0k62JSNyk6qBY0L2PPefaahfmgKRGXzKZk6ZQo06mVDBr6WSwrdLoLvWLQiLwNR4PmNMZN6RTRjH4151woh9PT8AaDQ2A9ZDG9eu05hw/2mZaoD0amtcW0AYVkPXRJ86+9fOSmjgKBP8hiy2EMRwYN8e85LeST1dVJ+W2RtK0tzF8ljbUXxylzvnv5zHHHR7OCGaeCFuxBEk7XcPOqpfY2pwUw0zGB4rbPubWDYmZ55j4cS1iaWm7cvhvHFI5L0hYinqc1Niz1UDIBYQJ7+MNAAkABhl7dz53VYY194n3zQ0MtYxdKktHuyaggDQ5z/2g8IaRHW7K1MfVYrINBkrRdQof9e71+ko1V/CFwlF3BRpqkBJ3d1wjL1WA/0Xj7sg1VcXJodBm6UHc5hfQS7ZIp2DdKHUn5hStNZPv4yIHrUsXztm75wyd2AhLKNVJtXwI0XIoMCcY8hliqv5SISWn/cZY9FjbU="
+  # PyPi deployment for tagged commits:
+  # -> build a PyPi package when a version is set
+  # Bintray deployment for develop branch and tagged commits:
+  # -> build Deb/Rpm packages on develop branch or when a version is set
+  - provider: pypi
+    distributions: "sdist bdist_wheel"
+    skip_existing: true
     on:
-      branch: develop
+      tags: true
+    user: alignak
+    password:
+      secure: "ucMiUgo9FqFhWV9FQfcf8b0aPpjQLpu6eeDXDtxRzSuiAzGnXetlhUkLmKxw08ZSLLqd/42kL1aGTPN/3eZAy2uRgWz5Nwa/YLZUoJMyqDSX9jygIRAc19WPpgdpXsEEEIpcDvg+br+KMt6DDwVYLjqbgwTlnyuVJx1ZDv4zLa5TvLBhC8za+W3RXRWG3whmTiTDiJT5nhqlN+UhWkLXC9RMR/MLzfIzwGahBtyZRRUCrMQCLZkVdjpPj2VrjEgZPJif6TP9zLgjJKI0EqJAdG/X8s5ht5MlsXWcbsZqMa+S/ZTVIguWhT+uynPmFE+ob03OpCdA21V4uVXwfPp/K2AZLQtVQIeqH/WyJXUD9gs28aYAfc8vSrMNwyCnlBHiFuRoixH8mBhtJS3ybFgUBniaXqkXol5d4mnQCYW3Db2MNPztU7Q0mi/cN7o3zo+Fb71gpGSMB2RwnhYwxMqFC0vUA1ipSx6ooxvczHJ1XhTdUq4jDa2u3pQk7zjyv70nk4nl8gCt51PjNkHZ279KXOIs+jF+uu50B93UcZDIguotvlY8oFoNphkGb+GiTZQxxYHiJYX3dIauUwunZO2rPmDxfSrqpvgKoVuWUCClJhNOXTIvJKXVvb/5xG2GxIuKOL2ORQUmdn/YZoawx0d2k0FDjNwVXpeVd0GKxD1uGAs="
   - provider: bintray
     skip_cleanup: true
-    file: .bintray.json
-    user: ddurieux
+    file: dist/.bintray-deb.json
+    user: mohierf
     key:
-      secure: "aCA7sGVt4Pxty1d/tqo7iwipLBa9OcgbQHbOC+baDkBUp1DGrddbo62AEKBqWg41KLConQs4e2k/STSW8nOJU4M61yxKLx+hrCwoDbOzTxVRoZGHMBmHv3gBz5bF6/wYP5pCnsj/M1//LjzFQG9MQ5JiFv3iPSDRWdLOLTmg5vXgFDyQ4/Vt9Ad/1Lq+rwxjHHHswsO08LVdo0k62JSNyk6qBY0L2PPefaahfmgKRGXzKZk6ZQo06mVDBr6WSwrdLoLvWLQiLwNR4PmNMZN6RTRjH4151woh9PT8AaDQ2A9ZDG9eu05hw/2mZaoD0amtcW0AYVkPXRJ86+9fOSmjgKBP8hiy2EMRwYN8e85LeST1dVJ+W2RtK0tzF8ljbUXxylzvnv5zHHHR7OCGaeCFuxBEk7XcPOqpfY2pwUw0zGB4rbPubWDYmZ55j4cS1iaWm7cvhvHFI5L0hYinqc1Niz1UDIBYQJ7+MNAAkABhl7dz53VYY194n3zQ0MtYxdKktHuyaggDQ5z/2g8IaRHW7K1MfVYrINBkrRdQof9e71+ko1V/CFwlF3BRpqkBJ3d1wjL1WA/0Xj7sg1VcXJodBm6UHc5hfQS7ZIp2DdKHUn5hStNZPv4yIHrUsXztm75wyd2AhLKNVJtXwI0XIoMCcY8hliqv5SISWn/cZY9FjbU="
+      secure: "uVe6zB01lq4NDnceaYWJD6F/trg6SD+Y9YX9yqVsO1VIm28QjH/to7Wu2jB5WCHuYhE9YLrX890fgm4fA+z9Ni834/GnyXsbMXiZdRwjgUAUrr+fFrmH4XGmYjXkpEALDjuf3A9E4NoQhKj8LCgpWPuhkbuOwnEkUKsWYAKHD10mIonrvYPO7ZCdKH4N/D5Bi0cxpv1bG5uPKNN26vMkIkc06lYZcYbvxoxbJYPtvfm3y72crrlUVN1mul5lSsnLbMIvHq0d/TJ1CBjaIG9oO+vG2H5YAYNYKYlM9f5Vxj6/SpcWl02j1udvQQ6HKUHSoqjRA8uX3pQ6yfHf4ns30q1NA5b8yNcdUCMT/sr/aELoMNtio+Kp+lyU5rVDWUHqRzAbHAPuLWEV8pzdfWQ44JocTezMJkEu7qWUlyx7nGXwvmtBOiwTsr0aucT3343x0/wR5XregUoWHKNYfZrttl7o+FrT4/agoqwqDc3wM7qbaeHxUQIbWpq1+qafromxgtdkfeag4o5gJVByht5rKrHx+/jWzXuSBcGuaw5/g/bmmbmGpUH7qVYq4qXU7qP1M7TY1+wF/E9cfUFqYD36iJdgSasnpPQVAeWVIMgFKTfZKk9nxqH79SRn+qynNce7Ak05xjlIYElEFluE1qf+cfXuLl3r3Xd4Qy3LmGcVqQI="
+    on:
+      all_branches: true
+  - provider: bintray
+    skip_cleanup: true
+    file: dist/.bintray-deb.json
+    user: mohierf
+    key:
+      secure: "uVe6zB01lq4NDnceaYWJD6F/trg6SD+Y9YX9yqVsO1VIm28QjH/to7Wu2jB5WCHuYhE9YLrX890fgm4fA+z9Ni834/GnyXsbMXiZdRwjgUAUrr+fFrmH4XGmYjXkpEALDjuf3A9E4NoQhKj8LCgpWPuhkbuOwnEkUKsWYAKHD10mIonrvYPO7ZCdKH4N/D5Bi0cxpv1bG5uPKNN26vMkIkc06lYZcYbvxoxbJYPtvfm3y72crrlUVN1mul5lSsnLbMIvHq0d/TJ1CBjaIG9oO+vG2H5YAYNYKYlM9f5Vxj6/SpcWl02j1udvQQ6HKUHSoqjRA8uX3pQ6yfHf4ns30q1NA5b8yNcdUCMT/sr/aELoMNtio+Kp+lyU5rVDWUHqRzAbHAPuLWEV8pzdfWQ44JocTezMJkEu7qWUlyx7nGXwvmtBOiwTsr0aucT3343x0/wR5XregUoWHKNYfZrttl7o+FrT4/agoqwqDc3wM7qbaeHxUQIbWpq1+qafromxgtdkfeag4o5gJVByht5rKrHx+/jWzXuSBcGuaw5/g/bmmbmGpUH7qVYq4qXU7qP1M7TY1+wF/E9cfUFqYD36iJdgSasnpPQVAeWVIMgFKTfZKk9nxqH79SRn+qynNce7Ak05xjlIYElEFluE1qf+cfXuLl3r3Xd4Qy3LmGcVqQI="
+    on:
+      tags: true
+  - provider: bintray
+    skip_cleanup: true
+    file: dist/.bintray-rpm.json
+    user: mohierf
+    key:
+      secure: "uVe6zB01lq4NDnceaYWJD6F/trg6SD+Y9YX9yqVsO1VIm28QjH/to7Wu2jB5WCHuYhE9YLrX890fgm4fA+z9Ni834/GnyXsbMXiZdRwjgUAUrr+fFrmH4XGmYjXkpEALDjuf3A9E4NoQhKj8LCgpWPuhkbuOwnEkUKsWYAKHD10mIonrvYPO7ZCdKH4N/D5Bi0cxpv1bG5uPKNN26vMkIkc06lYZcYbvxoxbJYPtvfm3y72crrlUVN1mul5lSsnLbMIvHq0d/TJ1CBjaIG9oO+vG2H5YAYNYKYlM9f5Vxj6/SpcWl02j1udvQQ6HKUHSoqjRA8uX3pQ6yfHf4ns30q1NA5b8yNcdUCMT/sr/aELoMNtio+Kp+lyU5rVDWUHqRzAbHAPuLWEV8pzdfWQ44JocTezMJkEu7qWUlyx7nGXwvmtBOiwTsr0aucT3343x0/wR5XregUoWHKNYfZrttl7o+FrT4/agoqwqDc3wM7qbaeHxUQIbWpq1+qafromxgtdkfeag4o5gJVByht5rKrHx+/jWzXuSBcGuaw5/g/bmmbmGpUH7qVYq4qXU7qP1M7TY1+wF/E9cfUFqYD36iJdgSasnpPQVAeWVIMgFKTfZKk9nxqH79SRn+qynNce7Ak05xjlIYElEFluE1qf+cfXuLl3r3Xd4Qy3LmGcVqQI="
+    on:
+      all_branches: true
+  - provider: bintray
+    skip_cleanup: true
+    file: dist/.bintray-rpm.json
+    user: mohierf
+    key:
+      secure: "uVe6zB01lq4NDnceaYWJD6F/trg6SD+Y9YX9yqVsO1VIm28QjH/to7Wu2jB5WCHuYhE9YLrX890fgm4fA+z9Ni834/GnyXsbMXiZdRwjgUAUrr+fFrmH4XGmYjXkpEALDjuf3A9E4NoQhKj8LCgpWPuhkbuOwnEkUKsWYAKHD10mIonrvYPO7ZCdKH4N/D5Bi0cxpv1bG5uPKNN26vMkIkc06lYZcYbvxoxbJYPtvfm3y72crrlUVN1mul5lSsnLbMIvHq0d/TJ1CBjaIG9oO+vG2H5YAYNYKYlM9f5Vxj6/SpcWl02j1udvQQ6HKUHSoqjRA8uX3pQ6yfHf4ns30q1NA5b8yNcdUCMT/sr/aELoMNtio+Kp+lyU5rVDWUHqRzAbHAPuLWEV8pzdfWQ44JocTezMJkEu7qWUlyx7nGXwvmtBOiwTsr0aucT3343x0/wR5XregUoWHKNYfZrttl7o+FrT4/agoqwqDc3wM7qbaeHxUQIbWpq1+qafromxgtdkfeag4o5gJVByht5rKrHx+/jWzXuSBcGuaw5/g/bmmbmGpUH7qVYq4qXU7qP1M7TY1+wF/E9cfUFqYD36iJdgSasnpPQVAeWVIMgFKTfZKk9nxqH79SRn+qynNce7Ak05xjlIYElEFluE1qf+cfXuLl3r3Xd4Qy3LmGcVqQI="
     on:
       tags: true

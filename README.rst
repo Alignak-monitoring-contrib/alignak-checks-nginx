@@ -1,5 +1,5 @@
-Alignak checks package for Elasticsearch
-========================================
+Alignak checks package for Nginx
+================================
 
 *Checks pack for monitoring Nginx with the check_nginx script*
 
